@@ -18,20 +18,17 @@ public class Main {
 
         initializer(centrales, clientes);
 
-        System.out.println(garantizados);
-        System.out.println(noGarantizados);
+        System.out.println(estado.size());
+        System.out.println(estado);
 
-        double total = 0.0;
-        for(int i = 0; i < garantizados.size(); i++) {
-            int index = (int) garantizados.get(i);
-            System.out.println(clientes.get(index).getConsumo());
-            total += clientes.get(index).getConsumo();
-        }
-        System.out.println(total);
+        initState(centrales, clientes);
 
-        System.out.println(centrales.size());
+        System.out.println(estado);
     }
     public static void initializer(Centrales centrales, Clientes clientes) {
+        estado.setSize(clientes.size());
+        for (int i = 0; i < estado.size(); i++) estado.set(i, -1);
+
         for(int i = 0; i < clientes.size(); i++) {
             if(clientes.get(i).getContrato() == Cliente.GARANTIZADO) garantizados.add(i);
             else noGarantizados.add(i);
@@ -41,13 +38,35 @@ public class Main {
 
     public static void initState(Centrales centrales, Clientes clientes) {
         int indexCentral = 0;
+        Central central = centrales.get(indexCentral);
         for (int i = 0; i < garantizados.size(); i++) {
             int indexClient = (int) garantizados.get(i);
             Cliente client = clientes.get(indexClient);
             double increase = client.getConsumo();
-            Central central = centrales.get(indexCentral);
-            if(centralCanHaveClient(central, increase)) central.setProduccion(central.getProduccion() + increase);
-            else indexCentral++; // NO ESTÀ ACABADO, No funciona
+            while(!centralCanHaveClient(central, increase) && indexCentral < centrales.size()) {
+                ++indexCentral;
+                central = centrales.get(indexCentral);
+            }
+            if (indexCentral < centrales.size()) {
+                estado.set(indexClient, indexCentral);
+            } else {
+                System.out.println("We have an Impossible situation");
+                break;
+            }
+        }
+
+        for (int i = 0; i < noGarantizados.size(); i++) {
+            int indexClient = (int) noGarantizados.get(i);
+            Cliente client = clientes.get(indexClient);
+            double increase = client.getConsumo();
+            while(!centralCanHaveClient(central, increase) && indexCentral < centrales.size()) {
+                ++indexCentral;
+                central = centrales.get(indexCentral);
+            }
+            if (indexCentral < centrales.size()) {
+                estado.set(indexClient, indexCentral);
+            } else break;
+
         }
     }
 
