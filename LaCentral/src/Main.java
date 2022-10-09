@@ -80,4 +80,11 @@ public class Main {
         double dist_y = cliente.getCoordY() - central.getCoordY();
         return sqrt(pow(dist_x,2) + pow(dist_y,2));
     }
+
+    public static void operadorSwap(int indexCliente1, int indexCliente2) {
+        int indexCentralCliente1 = (int) estado.get(indexCliente1);
+        int indexCentralCliente2 = (int) estado.get(indexCliente2);
+        estado.set(indexCliente1, indexCentralCliente2);
+        estado.set(indexCliente2, indexCentralCliente1);
+    }
 }
