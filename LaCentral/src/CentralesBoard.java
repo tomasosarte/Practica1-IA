@@ -126,6 +126,11 @@ public class CentralesBoard {
         Estado.set(indexCliente2, indexCentralCliente1);
     }
 
+    public void operadorSwap2(int indexClient) {
+        boolean hayUnGarantizado = clientes.get(indexClient).getContrato() == Cliente.GARANTIZADO;
+        
+    }
+
     // GETTERS
     public Vector<Integer> getState() {
         return Estado;
@@ -141,5 +146,12 @@ public class CentralesBoard {
     public String toString(){
         // Rellenar
         return ("|");
+    }
+    // Determina si el estado és solución o no
+    public boolean isSolution() {
+        for (Integer garantizado: Garantizados) {
+            if (Estado.get(garantizado) == -1) return false;
+        }
+        return true;
     }
 }
