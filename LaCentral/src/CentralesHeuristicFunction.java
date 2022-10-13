@@ -24,6 +24,7 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
         double profit = 0.0;
         for(int i = 0; i < Estado.size(); i++) {
             int indexCentral = Estado.get(i);
+            // INDEMNIZAR
             if(indexCentral == -1) {
                 profit -= clientes.get(i).getConsumo() * VEnergia.getTarifaClientePenalizacion(clientes.get(i).getTipo());
             } else {
