@@ -37,12 +37,13 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
         for (Central central : centrales) {
             double production = central.getProduccion();
             int type = central.getTipo();
-            if (production == 0.0) {
+            if (production <= 0.1) {
                 profit -= VEnergia.getCosteParada(type);
             } else {
                 profit -= realProduction(central) * VEnergia.getCosteProduccionMW(type) + VEnergia.getCosteMarcha(type);
             }
         }
+        //System.out.println(profit);
         return profit;
     }
 

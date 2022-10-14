@@ -18,11 +18,13 @@ public class Main {
     public static Vector<Integer> noGarantizados;
 
     public static void main(String[] args) throws Exception {
-        Centrales centrales = new Centrales(new int[] {1,1,1}, 0);
-        Clientes clientes = new Clientes(100, new double[] { 0.3, 0.4,0.3}, 0.5, 0);
+        Centrales centrales = new Centrales(new int[] {1,1,2}, 1234);
+        Clientes clientes = new Clientes(100, new double[] {0.25, 0.3, 0.45}, 0.75, 1234);
 
         CentralesBoard centralesBoard = new CentralesBoard(centrales, clientes);
-
+        CentralesHeuristicFunction HEUR = new CentralesHeuristicFunction();
+        double H = HEUR.getHeuristicValue(centralesBoard);
+        System.out.println(H);
         Problem p = new Problem(
                 centralesBoard,
                 new CentralesSuccesorFunction(),
@@ -33,13 +35,16 @@ public class Main {
         Search alg_hill = new HillClimbingSearch();
         //SimulatedAnnealingSearch search = new SimulatedAnnealingSearch();
         SearchAgent agent = new SearchAgent(p,alg_hill);
+
         System.out.println();
         printActions(agent.getActions());
+        printInstrumentation(agent.getInstrumentation());
     }
 
     private static void printInstrumentation(Properties properties) {
-        for (Object o : properties.keySet()) {
-            String key = (String) o;
+        Iterator keys = properties.keySet().iterator();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
             String property = properties.getProperty(key);
             System.out.println(key + " : " + property);
         }
@@ -47,8 +52,8 @@ public class Main {
     }
 
     private static void printActions(List actions) {
-        for (Object o : actions) {
-            String action = (String) o;
+        for (int i = 0; i < actions.size(); i++) {
+            String action = (String) actions.get(i);
             System.out.println(action);
         }
     }
