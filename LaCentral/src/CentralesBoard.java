@@ -4,8 +4,7 @@ import IA.Energia.Cliente;
 import IA.Energia.Clientes;
 import IA.Energia.VEnergia;
 
-import java.util.Collections;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import static java.lang.Math.*;
 
@@ -14,18 +13,19 @@ public class CentralesBoard {
     // VALORES PARA EL ESTADO
     private final Centrales centrales;
     private final Clientes clientes;
-    private static Vector<Integer> Estado = new Vector<Integer>();
-    private static Vector<Integer> Garantizados = new Vector<Integer>();
-    private static Vector<Integer> NoGarantizados = new Vector<Integer>();
+    private static ArrayList<Integer> Estado;
+    private static ArrayList<Integer> Garantizados;
+    private static ArrayList<Integer> NoGarantizados;
 
     public void initializer() {
-        // Size del estado a número de clientes
-        Estado.setSize(clientes.size());
-        // Inicializar el estado con cada cliente asignado a ninguna central
-        Collections.fill(Estado, -1);
-        // Dividir clientes según su contrato
-        for(int i = 0; i < clientes.size(); i++) {
-            if(clientes.get(i).getContrato() == Cliente.GARANTIZADO) Garantizados.add(i);
+        // Inicializar estructuras
+        Estado = new ArrayList<>();
+        Garantizados = new ArrayList<>();
+        NoGarantizados = new ArrayList<>();
+        for( int i = 0 ; i < clientes.size(); ++i) {
+            //Inicializar Estado y estructuras de clientes
+            Estado.add(-1);
+            if (clientes.get(i).getContrato() == Cliente.GARANTIZADO) Garantizados.add(i);
             else NoGarantizados.add(i);
         }
         // Set de la producción de las centrales a 0
@@ -43,9 +43,8 @@ public class CentralesBoard {
     }
 
     public void initState2() {
-        // Índice de la central a rellenar
+        // Índice de la central a rellenar y la central
         int indexCentral = 0;
-        // Central a rellenar
         Central central = centrales.get(indexCentral);
         // Iteraciones dentro de la estructura de clientes con contrato garantizado
         for (Integer garantizado : Garantizados) {
@@ -65,10 +64,9 @@ public class CentralesBoard {
                 int nuevoIndexCentral = 0;
                 central = centrales.get(nuevoIndexCentral);
                 while (!centralCanHaveClient(central, increase) && nuevoIndexCentral < centrales.size()) {
-                    // Incrementa el índice de central a mirar
+                    // Incrementa el índice de central a mirar y coge la central
                     ++nuevoIndexCentral;
-                    // Coge la central
-                    central = centrales.get(nuevoIndexCentral);
+                    if(indexCentral < centrales.size()) central = centrales.get(nuevoIndexCentral);
                 }
                 // SE puede añadir cliente a una central
                 if (nuevoIndexCentral < centrales.size()) {
@@ -85,11 +83,44 @@ public class CentralesBoard {
             indexCentral= ++indexCentral % centrales.size();
             central = centrales.get(indexCentral);
         }
+        indexCentral = 0;
+        central = centrales.get(indexCentral);
+        for (Integer noGarantizado : NoGarantizados) {
+            // Índice del cliente garantizado
+            int indexClient = noGarantizado;
+            // Cliente garantizado
+            Cliente client = clientes.get(indexClient);
+            // Distancia entre cliente y central
+            double distance = distance(client, central);
+            // Consumo del cliente garantizado + Pérdida de MW por transporte
+            double increase = client.getConsumo() + VEnergia.getPerdida(distance);
+            if(centralCanHaveClient(central, increase)) {
+                Estado.set(indexClient, indexCentral);
+                // Le incrementas la producción a la central correspondiente
+                centrales.get(indexCentral).setProduccion(centrales.get(indexCentral).getProduccion() + increase);
+            } else {
+                int nuevoIndexCentral = 0;
+                central = centrales.get(nuevoIndexCentral);
+                while (!centralCanHaveClient(central, increase) && nuevoIndexCentral < centrales.size()) {
+                    // Incrementa el índice de central a mirar y coge la central
+                    ++nuevoIndexCentral;
+                    if(indexCentral < centrales.size()) central = centrales.get(nuevoIndexCentral);
+                }
+                // SE puede añadir cliente a una central
+                if (nuevoIndexCentral < centrales.size()) {
+                    // Le pones al cliente la central correspondiente e incrementa la producción en la central
+                    Estado.set(indexClient, nuevoIndexCentral);
+                    central.setProduccion(central.getProduccion()+increase);
+                } else break;
+            }
+            // Augmenter índice central
+            indexCentral = ++indexCentral % centrales.size();
+            central = centrales.get(indexCentral);
+        }
     }
     public void initState() {
-        // Índice de la central a rellenar
+        // Índice de la central a rellenar y la central
         int indexCentral = 0;
-        // Central a rellenar
         Central central = centrales.get(indexCentral);
         // Iteraciones dentro de la estructura de clientes con contrato garantizado
         for (Integer garantizado : Garantizados) {
@@ -103,17 +134,15 @@ public class CentralesBoard {
             double increase = client.getConsumo() + VEnergia.getPerdida(distance);
             // Encuentra la primera central en el vector que puede soportar el incremento de MW en producción
             while (!centralCanHaveClient(central, increase) && indexCentral < centrales.size()) {
-                // Incrementa el índice de central a mirar
+                // Incrementa el índice de central a mirar y cógela si se puede
                 ++indexCentral;
-                // Coge la central
-                central = centrales.get(indexCentral);
+                if(indexCentral < centrales.size()) central = centrales.get(indexCentral);
             }
             // SE puede añadir cliente a una central
             if (indexCentral < centrales.size()) {
-                // Le pones al cliente la central correspondiente
+                // Le pones al cliente la central correspondiente e incrementas la producción en la central
                 Estado.set(indexClient, indexCentral);
-                // Le incrementas la producción a la central correspondiente
-                centrales.get(indexCentral).setProduccion(centrales.get(indexCentral).getProduccion() + increase);
+                central.setProduccion(central.getProduccion()+increase);
             } else { // Si no hay ninguna central que pueda soportar a los clientes garantizados, no hay solución al problema
                 System.out.println("We have an Impossible situation");
                 break;
@@ -131,17 +160,15 @@ public class CentralesBoard {
             double increase = client.getConsumo() + VEnergia.getPerdida(distance);
             // Encuentra la primera central en el vector que puede soportar el incremento de MW en producción
             while (!centralCanHaveClient(central, increase) && indexCentral < centrales.size()) {
-                // Incrementa el índice de central a mirar
+                // Incrementa el índice de central a mirar y coge la central
                 ++indexCentral;
-                // Coge la central
                 if(indexCentral < centrales.size()) central = centrales.get(indexCentral);
             }
             // SE puede añadir cliente a una central
             if (indexCentral < centrales.size()) {
-                // Le pones al cliente la central correspondiente
+                // Incrementa el índice de central a mirar y cógela si se puede
                 Estado.set(indexClient, indexCentral);
-                // Le incrementas la producción a la central correspondiente
-                centrales.get(indexCentral).setProduccion(centrales.get(indexCentral).getProduccion() + increase);
+                central.setProduccion(central.getProduccion()+increase);
             } else break; // Para de iterar porque no puedes poner más clientes
         }
     }
@@ -152,14 +179,16 @@ public class CentralesBoard {
         // INICIALIZAR ESTRUCTURAS NECESARIAS
         initializer();
         // CREADORA del estado inicial:
-        initState2();
+        initState();
     }
     // CREADORA => COPIA DEL ESTADO ANTERIOR
-    public CentralesBoard(Centrales _centrales, Clientes _clientes, Vector<Integer> _estado, Vector<Integer> _Garantizados , Vector<Integer> _NoGarantizados){
-        centrales = (Centrales) _centrales.clone();
+    public CentralesBoard(Centrales _centrales, Clientes _clientes, ArrayList<Integer> _estado,
+                          ArrayList<Integer> _Garantizados, ArrayList<Integer> _NoGarantizados) throws Exception {
+        centrales = new Centrales(new int[] {5,10,25}, 1234);
+        for (int i = 0; i < _centrales.size(); i++) centrales.get(i).setProduccion(_centrales.get(i).getProduccion());
         clientes = _clientes;
-        // COPIA DEL ANTERIOR
-        Estado = new Vector<Integer>(_estado);
+        Estado =  new ArrayList<>(_estado.size());
+        Estado.addAll(_estado);
         Garantizados = _Garantizados;
         NoGarantizados = _NoGarantizados;
     }
@@ -188,7 +217,7 @@ public class CentralesBoard {
         double nuevoConsumoCentral1 = centralCliente1.getProduccion() - consumoCliente1Central1 + consumoCliente2Central1;
         double nuevoConsumoCentral2 = centralCliente2.getProduccion() - consumoCliente2Central2 - consumoCliente1Central2;
         // Se ha de cumplir la condición de que las nuevas centrales puedan soportar a los nuevos clientes
-        if (centralCanHaveClient(centralCliente1, nuevoConsumoCentral1) && centralCanHaveClient(centralCliente2, nuevoConsumoCentral2)) {
+        if (centralCanHaveClient(centralCliente1, consumoCliente2Central1) && centralCanHaveClient(centralCliente2, consumoCliente1Central2)) {
             centrales.get(indexCentralCliente1).setProduccion(nuevoConsumoCentral1);
             centrales.get(indexCentralCliente2).setProduccion(nuevoConsumoCentral2);
             // Cambiamos en el estado las centrales
@@ -197,7 +226,7 @@ public class CentralesBoard {
         }
     }
 
-    public void operadorSwapCentralVacio(int indexCliente1, int indexCliente2) {
+    public void operadorSwapCentralNull(int indexCliente1, int indexCliente2) {
         // Cogemos los índices de las centrales
         int indexCentralCliente1 = Estado.get(indexCliente1);
         int indexCentralCliente2 = Estado.get(indexCliente2);
@@ -214,7 +243,7 @@ public class CentralesBoard {
         double consumoCliente2Central2 = cliente2.getConsumo() + VEnergia.getPerdida(distanciaCliente2Central2);
         // Actualizamos la producción de las centrales
         double nuevoConsumoCentral2 = centralCliente2.getProduccion() - consumoCliente2Central2 - consumoCliente1Central2;
-        if(centralCanHaveClient(centralCliente2, nuevoConsumoCentral2)) {
+        if(centralCanHaveClient(centralCliente2, consumoCliente1Central2)) {
             centrales.get(indexCentralCliente2).setProduccion(nuevoConsumoCentral2);
             // Cambiamos en el estado las centrales
             Estado.set(indexCliente1, indexCentralCliente2);
@@ -222,28 +251,42 @@ public class CentralesBoard {
         }
     }
 
-    public void operadorShift(int indexCliente, int indexCentralNueva) {
+    public boolean operadorShift(int indexCliente, int indexCentralNueva) {
+        // Cogemos el índice de la central anterior
         int indexCentralClienteAnterior = Estado.get(indexCliente);
+        // Cogemos el cliente
         Cliente cliente = clientes.get(indexCliente);
-        Central anterior = centrales.get(indexCentralClienteAnterior);
+        //Cogemos la nueva central
         Central nueva = centrales.get(indexCentralNueva);
-
+        // Calculamos la distancia a la central nueva
         double distanciaClienteCentralNueva = distance(cliente, nueva);
-        double distanciaClienteCentralAnterior = distance(cliente, anterior);
+        // Calculamos el consumo a la central nueva
         double consumoClienteCentralNueva = cliente.getConsumo() + VEnergia.getPerdida(distanciaClienteCentralNueva);
-        double consumoClienteCentralAnterior = cliente.getConsumo() + VEnergia.getPerdida(distanciaClienteCentralAnterior);
-        double nuevoConsumoClienteCentralNueva = nueva.getProduccion() + consumoClienteCentralNueva;
-        double nuevoConsumoClienteCentralAnterior = anterior.getProduccion() - consumoClienteCentralAnterior;
-        if (centralCanHaveClient(nueva, nuevoConsumoClienteCentralNueva)) {
-            anterior.setProduccion(nuevoConsumoClienteCentralAnterior);
-            nueva.setProduccion(nuevoConsumoClienteCentralNueva);
+        // Calculamos la nueva producción de la central nueva
+        double nuevaProdCentralNueva = nueva.getProduccion() + consumoClienteCentralNueva;
+        if(indexCentralClienteAnterior != -1 && centralCanHaveClient(nueva, consumoClienteCentralNueva)) {
+            // Cogemos la central anterior
+            Central anterior = centrales.get(indexCentralClienteAnterior);
+            // Calculamos la distancia a la central anterior
+            double distanciaClienteCentralAnterior = distance(cliente, anterior);
+            // Calculamos el consumo a la central anterior
+            double consumoClienteCentralAnterior = cliente.getConsumo() + VEnergia.getPerdida(distanciaClienteCentralAnterior);
+            // Calculamos la nueva producción de la central anterior
+            double nuevaProdCentralAnterior = anterior.getProduccion() - consumoClienteCentralAnterior;
+            // Comprobamos que se pueda aplicar el operador
+            anterior.setProduccion(nuevaProdCentralAnterior);
+            nueva.setProduccion(nuevaProdCentralNueva);
             Estado.set(indexCliente, indexCentralNueva);
-        }
+            return true;
+        } else if (centralCanHaveClient(nueva, consumoClienteCentralNueva)){
+            nueva.setProduccion(nuevaProdCentralNueva);
+            Estado.set(indexCliente, indexCentralNueva);
+            return true;
+        } return false;
     }
 
-
     // GETTERS
-    public Vector<Integer> getState() {
+    public ArrayList<Integer> getState() {
         return Estado;
     }
     public Clientes getClients() {
@@ -252,20 +295,23 @@ public class CentralesBoard {
     public Centrales getCentrals() {
         return centrales;
     }
-    public Vector<Integer> getGarantizados() {
+    public ArrayList<Integer> getGarantizados() {
         return Garantizados;
     }
-    public Vector<Integer> getNoGarantizados() {
+    public ArrayList<Integer> getNoGarantizados() {
         return NoGarantizados;
     }
     // para poder sacar las cosas por pantalla
     public String toString(){
         // Rellenar
+        ArrayList<Integer> contador = new ArrayList<>();
+        for(int i = 0; i < centrales.size(); i++) contador.add(0);
+        for (int ce: Estado) contador.set(ce, contador.get(ce)+1);
         StringBuilder ret = new StringBuilder("|");
-        for (Central c: centrales) {
-            ret.append(c.getProduccion()).append(",").append(c.getTipo()).append("|");
+        for (int i = 0; i < centrales.size(); ++i) {
+            ret.append(centrales.get(i).getProduccion()).append("<-->").append(centrales.get(i).getTipo()).
+                    append("<-->").append(contador.get(i)).append("|");
         }
         return ret.toString();
     }
-
 }

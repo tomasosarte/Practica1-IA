@@ -1,8 +1,7 @@
 import IA.Energia.*;
 import aima.search.framework.HeuristicFunction;
-import aima.search.framework.StepCostFunction;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 import static java.lang.Math.max;
 
@@ -20,7 +19,7 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
         else return max(10.0, central.getProduccion());
     }
 
-    public double calculateProfit(Clientes clientes, Centrales centrales, Vector<Integer> Estado) throws Exception {
+    public double calculateProfit(Clientes clientes, Centrales centrales, ArrayList<Integer> Estado) throws Exception {
         double profit = 0.0;
         for(int i = 0; i < Estado.size(); i++) {
             int indexCentral = Estado.get(i);
@@ -44,15 +43,14 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
             }
         }
         //System.out.println(profit);
-        return profit;
+        return -profit;
     }
 
     public double getHeuristicValue(Object state) {
         CentralesBoard board = (CentralesBoard) state;
-        Vector <Integer> Estado = ((CentralesBoard) state).getState();
-        Clientes clientes = ((CentralesBoard) state).getClients();
-        Centrales centrales = ((CentralesBoard) state).getCentrals();
-
+        ArrayList<Integer> Estado = board.getState();
+        Clientes clientes = board.getClients();
+        Centrales centrales = board.getCentrals();
         try {
             return calculateProfit(clientes, centrales, Estado);
         } catch (Exception e) {
