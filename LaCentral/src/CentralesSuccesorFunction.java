@@ -18,7 +18,7 @@ public class CentralesSuccesorFunction implements SuccessorFunction {
 
         Centrales centrales = board.getCentrals();
         Clientes clientes = board.getClients();
-        ArrayList<Integer> estado = board.getState();
+        ArrayList<Contrato> estado = board.getState();
         ArrayList<Integer> Garantizados = board.getGarantizados();
         ArrayList<Integer> NoGarantizados = board.getNoGarantizados();
 
@@ -37,7 +37,7 @@ public class CentralesSuccesorFunction implements SuccessorFunction {
                 }
                 Cliente clienteI = newBoard.getClients().get(i);
                 Cliente clienteJ = newBoard.getClients().get(j);
-                if(estado.get(i) != -1 && estado.get(j) != -1 && !Objects.equals(estado.get(i), estado.get(j))) {
+                if(estado.get(i).get_central() != -1 && estado.get(j).get_central() != -1 && !Objects.equals(estado.get(i), estado.get(j))) {
                     double profit = -heuristic.getHeuristicValue(newBoard);
                     String message = "Swap client " + i + " with client " + j + " have this total profit: " + profit;
                     newBoard.operadorSwap2Centrales(i, j);
@@ -45,14 +45,14 @@ public class CentralesSuccesorFunction implements SuccessorFunction {
                     //System.out.println(message);
                     //System.out.println(newBoard);
                 }
-                else if(estado.get(i) == -1 && estado.get(j) != -1 && clienteJ.getContrato() != Cliente.GARANTIZADO) {
+                else if(estado.get(i).get_central() == -1 && estado.get(j).get_central() != -1 && clienteJ.getContrato() != Cliente.GARANTIZADO) {
                     double profit = -heuristic.getHeuristicValue(newBoard);
                     String message = "Swap client " + i + " with client " + j + " have this total profit: " + profit;
                     newBoard.operadorSwapCentralNull(i, j);
                     retVal.add(new Successor(message, newBoard));
                     // System.out.println(message);
                     // System.out.println(newBoard);
-                } else if(estado.get(i) != -1 && estado.get(j) == -1 && clienteI.getContrato() != Cliente.GARANTIZADO){
+                } else if(estado.get(i).get_central() != -1 && estado.get(j).get_central() == -1 && clienteI.getContrato() != Cliente.GARANTIZADO){
                     double profit = -heuristic.getHeuristicValue(newBoard);
                     String message = "Swap client " + i + " with client " + j + " have this total profit: " + profit;
                     newBoard.operadorSwapCentralNull(j, i);
@@ -63,10 +63,11 @@ public class CentralesSuccesorFunction implements SuccessorFunction {
             }
             //System.out.println();
         }
-        /*
+/*
         for(int i = 0; i < estado.size(); i++) {
-            for (int j = 0; j < board.getCentrals().size(); j++) {
-                if(estado.get(i) != j) {
+            for (int j = 0; j < centrales.size(); j++) {
+                int centralAnterior = estado.get(i).get_central();
+                if(centralAnterior != j) {
                     CentralesBoard newBoard;
                     try {
                         newBoard = new CentralesBoard(centrales, clientes, estado, Garantizados, NoGarantizados);
@@ -74,19 +75,18 @@ public class CentralesSuccesorFunction implements SuccessorFunction {
                         throw new RuntimeException(e);
                     }
                     if(newBoard.operadorShift(i, j)) {
-                        int centralAnterior = estado.get(i);
                         double profit = -heuristic.getHeuristicValue(newBoard);
                         String message = "Shift client " + i + " from central " + centralAnterior + " to central " + j + " have this total profit: " + profit;
                         retVal.add(new Successor(message, newBoard));
-                        System.out.println(message);
-                        System.out.println(board);
-                        System.out.println(newBoard);
+                        // System.out.println(message);
+                        //System.out.println(board);
+                        //System.out.println(newBoard);
                     }
                 }
             }
             //System.out.println();
         }
-         */
+*/
         return retVal;
     }
 }

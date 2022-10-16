@@ -36,7 +36,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-
     private static void CentralesSimulatedAnnealingSearch(CentralesBoard centralesBoard) {
         System.out.println("\nTSP Simulated Annealing  -->");
         try {
@@ -52,7 +51,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-
     private static void printInstrumentation(Properties properties) {
         for (Object o : properties.keySet()) {
             String key = (String) o;
@@ -61,7 +59,6 @@ public class Main {
         }
 
     }
-
     private static void printActions(List<?> actions) {
         for (Object o : actions) {
             String action = o.toString();

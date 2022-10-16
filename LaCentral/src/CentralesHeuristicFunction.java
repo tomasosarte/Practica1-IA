@@ -19,10 +19,10 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
         else return max(10.0, central.getProduccion());
     }
 
-    public double calculateProfit(Clientes clientes, Centrales centrales, ArrayList<Integer> Estado) throws Exception {
+    public double calculateProfit(Clientes clientes, Centrales centrales, ArrayList<Contrato> Estado) throws Exception {
         double profit = 0.0;
         for(int i = 0; i < Estado.size(); i++) {
-            int indexCentral = Estado.get(i);
+            int indexCentral = Estado.get(i).get_central();
             // INDEMNIZAR
             if(indexCentral == -1) {
                 profit -= clientes.get(i).getConsumo() * VEnergia.getTarifaClientePenalizacion(clientes.get(i).getTipo());
@@ -48,7 +48,7 @@ public class CentralesHeuristicFunction implements HeuristicFunction {
 
     public double getHeuristicValue(Object state) {
         CentralesBoard board = (CentralesBoard) state;
-        ArrayList<Integer> Estado = board.getState();
+        ArrayList<Contrato> Estado = board.getState();
         Clientes clientes = board.getClients();
         Centrales centrales = board.getCentrals();
         try {
